@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
-import { performPasswordLogin } from '../dist/ias-login.js';
+import { performInteractiveLogin, performPasswordLogin } from '../dist/ias-login.js';
 
 // Every request is fulfilled locally. Only synthetic credentials reach these forms.
 const username = 'dummy.user@example.invalid';
@@ -11,6 +11,20 @@ const profile = { serviceName: 'browser regression', cookieScope: { type: 'all' 
 let browser;
 before(async () => { browser = await chromium.launch(); });
 after(async () => { await browser?.close(); });
+
+test('interactive login accepts an existing signed-in tenant profile', { timeout: 10000 }, async t => {
+  const context = await browser.newContext({ offline: true });
+  t.after(() => context.close());
+  await context.route('**/*', route => route.fulfill({
+    contentType: 'text/html', body: '<title>User Profile</title>Signed in'
+  }));
+  const page = await context.newPage();
+  await performInteractiveLogin(page, {
+    sapLoginUrl: 'https://tenant.accounts.ondemand.com/ui/protected/profilemanagement',
+    headful: true, mfaTimeout: 100
+  }, profile, logger);
+  assert.equal(await page.title(), 'User Profile');
+});
 
 function form(fields, action) {
   return `<title>Sign In</title><form method="post" action="${action}">

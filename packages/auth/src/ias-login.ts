@@ -69,7 +69,7 @@ const STANDARD_CUSTOMER_IAS_SUFFIXES = [
   '.accounts.cloud.sap',
   '.accounts.sapcloud.cn'
 ];
-const CUSTOMER_IAS_AUTH_PATH_PREFIXES = ['/saml2/', '/oauth2/', '/ui/', '/ids/'];
+const CUSTOMER_IAS_AUTH_PATH_PREFIXES = ['/saml2/', '/oauth2/', '/ui/public', '/ids/'];
 const IAS_BOOTSTRAP_TIMEOUT_MS = 10000;
 
 function parseUrl(value: string): URL | undefined {

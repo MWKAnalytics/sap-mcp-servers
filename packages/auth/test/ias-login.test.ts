@@ -194,4 +194,10 @@ describe('SAP IAS password login boundaries', () => {
     expect(isOnAuthPage(url, 'Log On')).toBe(true);
     expect(isAuthUrl(url)).toBe(true);
   });
+
+  it('does not treat a signed-in tenant profile as a login page', () => {
+    const url = 'https://tenant.accounts.ondemand.com/ui/protected/profilemanagement';
+    expect(isOnAuthPage(url, 'User Profile')).toBe(false);
+    expect(isAuthUrl(url)).toBe(false);
+  });
 });
