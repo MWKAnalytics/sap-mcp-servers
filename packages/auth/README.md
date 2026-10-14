@@ -160,7 +160,9 @@ When loading configuration from a `.env` file, quote any value containing `#`; d
 ### Customer IAS and corporate identity providers
 
 Direct password login supports the standard SAP Cloud Identity Services tenant domains
-`*.accounts.ondemand.com`, `*.accounts.cloud.sap`, and `*.accounts.sapcloud.cn`. The authenticator waits
+`*.accounts.ondemand.com`, `*.accounts.cloud.sap`, and `*.accounts.sapcloud.cn`. Set `SAP_LOGIN_URL`
+to the intended tenant's HTTPS URL; only that exact tenant origin and `https://accounts.sap.com`
+are allowed to receive credentials. Custom IAS domains require interactive login. The authenticator waits
 for the JavaScript redirect used by an unauthenticated tenant `/admin` entry page before detecting the
 credential form.
 
