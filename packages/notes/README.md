@@ -6,7 +6,7 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22.12.0-brightgreen.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0-blue.svg)](https://www.typescriptlang.org/)
 
 [![Add to Werkbank][werkbank-badge]][werkbank-install]
 
@@ -227,6 +227,9 @@ Retrieve full content and enriched metadata for a specific SAP Note.
 - Manual activity instructions
 - Attachments and SNOTE download URL
 - *(with `includeCorrections=true`)* Detailed correction entries with affected ABAP objects (TADIR) and per-correction prerequisites
+
+If SAP responds with HTTP 429, `fetch` returns an error; pause before retrying.
+Generic HTML and fallback JSON without note text are not returned as successful notes.
 
 **Examples:**
 ```

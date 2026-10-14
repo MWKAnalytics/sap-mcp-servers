@@ -13,10 +13,10 @@ import { createNotesAuthenticator } from './auth.js';
 import { SapNotesApiClient } from './sap-notes-api.js';
 import { logger } from './logger.js';
 import {
-  NoteSearchInputSchema,
-  NoteSearchOutputSchema,
-  NoteGetInputSchema,
-  NoteGetOutputSchema,
+  NoteSearchInputMcpSchema,
+  NoteSearchOutputMcpSchema,
+  NoteGetInputMcpSchema,
+  NoteGetOutputMcpSchema,
   SAP_NOTE_SEARCH_DESCRIPTION,
   SAP_NOTE_GET_DESCRIPTION
 } from './schemas/sap-notes.js';
@@ -215,7 +215,7 @@ class HttpSapNoteMcpServer {
       return await fn(cookieHeader);
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      if (msg.includes('SESSION_EXPIRED') || msg.includes('401') || msg.includes('Unauthorized') || msg.includes('session expired')) {
+      if (msg.includes('SESSION_EXPIRED') || /\b401\b/.test(msg) || msg.includes('Unauthorized') || msg.includes('session expired')) {
         logger.warn('Session expired, re-authenticating and retrying...');
         this.authenticator.invalidateAuth();
         const { cookieHeader: newCookie } = await this.authenticator.ensureSession();
@@ -241,8 +241,8 @@ class HttpSapNoteMcpServer {
       {
         title: 'Search SAP Notes',
         description: SAP_NOTE_SEARCH_DESCRIPTION,
-        inputSchema: NoteSearchInputSchema,
-        outputSchema: NoteSearchOutputSchema
+        inputSchema: NoteSearchInputMcpSchema,
+        outputSchema: NoteSearchOutputMcpSchema
       },
       async ({ q, lang = 'EN' }) => {
         logger.info(`🔎 [search] Starting search for query: "${q}"`);
@@ -301,8 +301,8 @@ class HttpSapNoteMcpServer {
       {
         title: 'Fetch SAP Note',
         description: SAP_NOTE_GET_DESCRIPTION,
-        inputSchema: NoteGetInputSchema,
-        outputSchema: NoteGetOutputSchema
+        inputSchema: NoteGetInputMcpSchema,
+        outputSchema: NoteGetOutputMcpSchema
       },
       async ({ id, lang = 'EN', includeCorrections = false }) => {
         logger.info(`📄 [fetch] Getting note ${id} (includeCorrections=${includeCorrections})`);
