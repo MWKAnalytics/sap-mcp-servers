@@ -21,7 +21,7 @@ function form(fields, action) {
 }
 
 async function login(t, { start, configured = start, passwordUrl, bootstrap = false, delayPassword = false }) {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ offline: true });
   t.after(() => context.close());
   const filled = [];
   const posted = [];
