@@ -178,6 +178,13 @@ identity provider.
 
 The `tokenCacheFile` and the SSO `storageStateFile` contain **live SAP session cookies**. Treat them as secrets: store them outside your repo (e.g. `~/.sap-mcp/`), never commit them, and add them to `.gitignore`. Credentials and passphrases are never written to these files, but the cookies they hold can be used to act as you on SAP services until they expire.
 
+## Tests
+
+Run `npm test -w @marianfoo/sap-mcp-auth` from the repository root for unit tests.
+For browser regressions, install Chromium with `npx playwright install chromium`, then run
+`npm run test:browser -w @marianfoo/sap-mcp-auth`. These tests use synthetic credentials and
+locally served forms to verify allowed origins, delegated login rejection, and the tenant admin redirect.
+
 ## License
 
 [Apache-2.0](./LICENSE)
