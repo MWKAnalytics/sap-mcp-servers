@@ -14,6 +14,7 @@ import { createNotesAuthenticator } from './auth.js';
 import { SapNotesApiClient } from './sap-notes-api.js';
 import { logger } from './logger.js';
 import { SERVER_VERSION } from './version.js';
+import { resolveHeadful } from './headful.js';
 import {
   NoteSearchInputMcpSchema,
   NoteSearchOutputMcpSchema,
@@ -109,13 +110,10 @@ class HttpSapNoteMcpServer {
       logger.warn('ACCESS_TOKEN not set - server will run WITHOUT endpoint authentication');
     }
 
-    const isDocker = process.env.DOCKER_ENV === 'true' ||
-                    process.env.NODE_ENV === 'production' ||
-                    !process.env.DISPLAY ||
-                    !process.stdin.isTTY ||
-                    process.env.CI === 'true';
-
-    const headful = !isDocker && process.env.HEADFUL === 'true';
+    const { headful, overridden } = resolveHeadful();
+    if (overridden) {
+      logger.warn(`HEADFUL=true is ignored here (${overridden}); the login browser runs headless`);
+    }
 
     logger.warn('Configuration loaded:', {
       authMethod,
