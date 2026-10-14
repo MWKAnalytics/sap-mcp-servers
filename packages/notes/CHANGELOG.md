@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.10](https://github.com/marianfoo/sap-mcp-servers/compare/sap-note-search-mcp-v0.3.9...sap-note-search-mcp-v0.3.10) (2026-10-14)
+
+
+### Bug Fixes
+
+* **deps:** refresh SDK and vulnerable dependency resolutions ([#83](https://github.com/marianfoo/sap-mcp-servers/issues/83)) ([e20284b](https://github.com/marianfoo/sap-mcp-servers/commit/e20284b923c92c3896f9d38eb79e6a438cc5c6e6))
+* **notes:** honour HEADFUL=true over stdio and on Windows ([#82](https://github.com/marianfoo/sap-mcp-servers/issues/82)) ([267b0f4](https://github.com/marianfoo/sap-mcp-servers/commit/267b0f4ab265619b07fcd771dacc5e26f9d35598))
+* shared SSO state path on Windows, real notes version, keep SSO state on session expiry ([#81](https://github.com/marianfoo/sap-mcp-servers/issues/81)) ([b9ffee1](https://github.com/marianfoo/sap-mcp-servers/commit/b9ffee17604348df056eab591c8eaed1a806604b))
+
 ## [0.3.9](https://github.com/marianfoo/sap-mcp-servers/compare/sap-note-search-mcp-v0.3.8...sap-note-search-mcp-v0.3.9) (2026-09-23)
 
 
