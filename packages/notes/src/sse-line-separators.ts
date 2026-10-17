@@ -1,21 +1,22 @@
 import type { NextFunction, Request, Response } from 'express';
 
 /**
- * Keep U+2028 (LINE SEPARATOR) and U+2029 (PARAGRAPH SEPARATOR) out of SSE frames.
+ * Keep U+2028, U+2029 and U+0085 (NEXT LINE) out of SSE frames.
  *
  * The Streamable HTTP transport sends every JSON-RPC message as a single `data: <json>` line.
- * JSON allows both characters unescaped inside strings, and SAP Note text contains them (e.g. note
+ * JSON allows these characters unescaped inside strings, and SAP Note text contains them (e.g. note
  * 3425804). SSE itself only treats LF, CR and CRLF as line ends, but some clients split on every
  * Unicode line break (Python's `str.splitlines()` does), cut the `data:` line at the first U+2028
  * and fail with "EOF while parsing a string". Writing the two characters as the six-character JSON
  * escapes (backslash, u, 2028 / 2029) is the same JSON value and contains no line break at all.
  *
- * This works on bytes (UTF-8 E2 80 A8 / E2 80 A9), so it does not depend on how the SDK writes its
+ * This works on bytes (UTF-8 E2 80 A8 / E2 80 A9 / C2 85), so it does not depend on how the SDK writes its
  * chunks, and it holds back a trailing partial sequence until the next chunk arrives.
  */
 
 const ESCAPED_LS = Buffer.from('\\u2028');
 const ESCAPED_PS = Buffer.from('\\u2029');
+const ESCAPED_NEL = Buffer.from('\\u0085');
 
 export interface LineSeparatorEscaper {
   /** Escape one chunk. May return fewer bytes than given if the chunk ends inside a sequence. */
@@ -31,11 +32,11 @@ export function createLineSeparatorEscaper(): LineSeparatorEscaper {
     const buf = carry.length ? Buffer.concat([carry, input]) : input;
     carry = Buffer.alloc(0);
 
-    // A chunk may end after E2 or E2 80: keep those bytes for the next chunk.
+    // A chunk may end after E2, E2 80 or C2: keep those bytes for the next chunk.
     let hold = 0;
     if (!final) {
       const n = buf.length;
-      if (n >= 1 && buf[n - 1] === 0xe2) hold = 1;
+      if (n >= 1 && (buf[n - 1] === 0xe2 || buf[n - 1] === 0xc2)) hold = 1;
       else if (n >= 2 && buf[n - 2] === 0xe2 && buf[n - 1] === 0x80) hold = 2;
       if (hold) carry = Buffer.from(buf.subarray(n - hold));
     }
@@ -43,8 +44,12 @@ export function createLineSeparatorEscaper(): LineSeparatorEscaper {
     const end = buf.length - hold;
     const parts: Buffer[] = [];
     let last = 0;
-    for (let i = 0; i + 2 < end; i++) {
-      if (buf[i] === 0xe2 && buf[i + 1] === 0x80 && (buf[i + 2] === 0xa8 || buf[i + 2] === 0xa9)) {
+    for (let i = 0; i + 1 < end; i++) {
+      if (buf[i] === 0xc2 && buf[i + 1] === 0x85) {
+        parts.push(buf.subarray(last, i), ESCAPED_NEL);
+        last = i + 2;
+        i++;
+      } else if (i + 2 < end && buf[i] === 0xe2 && buf[i + 1] === 0x80 && (buf[i + 2] === 0xa8 || buf[i + 2] === 0xa9)) {
         parts.push(buf.subarray(last, i), buf[i + 2] === 0xa8 ? ESCAPED_LS : ESCAPED_PS);
         last = i + 3;
         i += 2;
@@ -73,7 +78,7 @@ function toBuffer(chunk: unknown, encoding?: unknown): Buffer {
 }
 
 /**
- * Express middleware: escapes U+2028/U+2029 in `text/event-stream` responses only. JSON responses
+ * Express middleware: escapes Unicode line separators in `text/event-stream` responses only. JSON responses
  * keep their bytes (and their Content-Length) untouched.
  *
  * The MCP SDK sets the content type through `writeHead(status, headers)` rather than `setHeader()`,

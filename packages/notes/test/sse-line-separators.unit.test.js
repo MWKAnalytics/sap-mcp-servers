@@ -10,8 +10,9 @@ import { createLineSeparatorEscaper, escapeSseLineSeparators } from '../dist/sse
 
 const LS = String.fromCharCode(0x2028);
 const PS = String.fromCharCode(0x2029);
+const NEL = String.fromCharCode(0x85);
 const BACKSLASH = String.fromCharCode(0x5c);
-const escapedForm = (text) => text.split(LS).join(`${BACKSLASH}u2028`).split(PS).join(`${BACKSLASH}u2029`);
+const escapedForm = (text) => text.split(LS).join(`${BACKSLASH}u2028`).split(PS).join(`${BACKSLASH}u2029`).split(NEL).join(`${BACKSLASH}u0085`);
 
 // What Python's str.splitlines() treats as a line break (the client behaviour behind the bug).
 const PY_BREAKS = new Set([0x0a, 0x0b, 0x0c, 0x0d, 0x1c, 0x1d, 0x1e, 0x85, 0x2028, 0x2029]);
@@ -26,7 +27,7 @@ test('escaper rewrites U+2028/U+2029 and leaves other multi-byte characters alon
 });
 
 test('escaper handles a separator split across any chunk boundary', () => {
-  const input = Buffer.from(`data: {"t":"a${LS}b${PS}c€${LS}"}\n\n`);
+  const input = Buffer.from(`data: {"t":"a${LS}b${PS}c€©${LS}${NEL}end"}\n\n`);
   const expected = escapedForm(input.toString('utf8'));
   for (let split = 0; split <= input.length; split++) {
     const escaper = createLineSeparatorEscaper();
@@ -40,9 +41,11 @@ test('escaper handles a separator split across any chunk boundary', () => {
 });
 
 test('escaper flushes a dangling partial sequence unchanged', () => {
-  const escaper = createLineSeparatorEscaper();
-  const out = Buffer.concat([escaper.push(Buffer.from([0x61, 0xe2, 0x80])), escaper.flush()]);
-  assert.deepEqual([...out], [0x61, 0xe2, 0x80]);
+  for (const bytes of [[0x61, 0xe2, 0x80], [0xe2], [0xc2]]) {
+    const escaper = createLineSeparatorEscaper();
+    const out = Buffer.concat([escaper.push(Buffer.from(bytes)), escaper.flush()]);
+    assert.deepEqual([...out], bytes);
+  }
 });
 
 test('middleware escapes SSE responses (writeHead and setHeader) and leaves JSON untouched', async (t) => {
@@ -92,7 +95,7 @@ test('HTTP endpoint: note text with U+2028 survives a line-splitting SSE reader'
     else process.env.ACCESS_TOKEN = previousAccessToken;
   });
 
-  const noteText = `${'a'.repeat(3000)}${LS}step 1${PS}ô€${LS}end`;
+  const noteText = `${'a'.repeat(3000)}${LS}step 1${PS}ô€${LS}${NEL}end`;
   const server = new HttpSapNoteMcpServer();
   server.createMcpServer = () => {
     const mcp = new McpServer({ name: 'sap-note-search-mcp', version: 'test' });
