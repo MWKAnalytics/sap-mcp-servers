@@ -28,8 +28,8 @@ Keep the contributor's middleware on `/mcp`. It escapes the wire bytes, carries 
 sequences between chunks, and leaves ordinary JSON responses alone. Add U+0085 to cover the same
 parser failure. No content normalization, SDK fork, extra dependency or client-specific setting.
 
-Remove the middleware when the minimum supported SDK escapes all three characters, with the same
-HTTP and chunk-boundary regressions still passing. A released fix for only two characters is not
+Remove the middleware when the minimum supported SDK escapes all three characters, retaining the
+HTTP endpoint regression and making sure it passes without the middleware. A released fix for only two characters is not
 enough to remove the U+0085 coverage.
 
 ## Verification

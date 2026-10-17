@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
-import http from 'node:http';
 import test from 'node:test';
 import express from 'express';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -27,7 +26,7 @@ test('escaper rewrites U+2028/U+2029 and leaves other multi-byte characters alon
 });
 
 test('escaper handles a separator split across any chunk boundary', () => {
-  const input = Buffer.from(`data: {"t":"a${LS}b${PS}c€©${LS}${NEL}end"}\n\n`);
+  const input = Buffer.from(`data: {"t":"a${LS}b${PS}c€©\u00a0\u2019${LS}${NEL}end"}\n\n`);
   const expected = escapedForm(input.toString('utf8'));
   for (let split = 0; split <= input.length; split++) {
     const escaper = createLineSeparatorEscaper();

@@ -7,11 +7,13 @@ import type { NextFunction, Request, Response } from 'express';
  * JSON allows these characters unescaped inside strings, and SAP Note text contains them (e.g. note
  * 3425804). SSE itself only treats LF, CR and CRLF as line ends, but some clients split on every
  * Unicode line break (Python's `str.splitlines()` does), cut the `data:` line at the first U+2028
- * and fail with "EOF while parsing a string". Writing the two characters as the six-character JSON
- * escapes (backslash, u, 2028 / 2029) is the same JSON value and contains no line break at all.
+ * and fail with "EOF while parsing a string". Writing them as six-character JSON escapes
+ * (`\u2028`, `\u2029`, `\u0085`) preserves the JSON value without adding a line break.
  *
  * This works on bytes (UTF-8 E2 80 A8 / E2 80 A9 / C2 85), so it does not depend on how the SDK writes its
  * chunks, and it holds back a trailing partial sequence until the next chunk arrives.
+ * Remove this middleware when the minimum SDK version escapes all three characters and the
+ * HTTP endpoint regression passes without it. Keep that regression when removing this module.
  */
 
 const ESCAPED_LS = Buffer.from('\\u2028');
